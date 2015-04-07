@@ -12,32 +12,8 @@
         <property name="brokerURL" value="tcp://localhost:61616"/>
     </bean>
 
-    <!--
-        Simple camel route which send every one minute a message on the console.
-    -->
     <camelContext xmlns="http://camel.apache.org/schema/spring"
                   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
-        <!-- <route id="timer-to-console">
-            <from uri="timer://foo?fixedRate=true&amp;period=10s"/>
-            <transform>
-               <simple>Hello Web Application, how are you?</simple>
-            </transform>
-            <to uri="stream:out"/>
-        </route>
-        -->
-        <!--
-        <route id="fedora-to-console">
-            <from uri="activemq:fedora_indexing"/>
-            <to uri="fcrepo:localhost:8080/fcrepo/rest"/>
-            <to uri="stream:out"/>
-        </route>
-        -->
-        <!--
-        <route id="test-amqp">
-            <from uri="amqp:queue:camel_test"/>
-            <to uri="stream:out"/>
-        </route>
-        -->
         <route id="fedora-to-solr">
             <from uri="activemq:fedora_indexing"/>
             <to uri="fcrepo:localhost:8080/fcrepo/rest"/>
