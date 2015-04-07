@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:camel="http://camel.apache.org/schema/spring"
+    xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring
+       http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="brokerURL" value="tcp://localhost:61616"/>
+    </bean>
+
+    <!--
+        Simple camel route which send every one minute a message on the console.
+    -->
+    <camelContext xmlns="http://camel.apache.org/schema/spring"
+                  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+        <!-- <route id="timer-to-console">
+            <from uri="timer://foo?fixedRate=true&amp;period=10s"/>
+            <transform>
+               <simple>Hello Web Application, how are you?</simple>
+            </transform>
+            <to uri="stream:out"/>
+        </route>
+        -->
+        <!--
+        <route id="fedora-to-console">
+            <from uri="activemq:fedora_indexing"/>
+            <to uri="fcrepo:localhost:8080/fcrepo/rest"/>
+            <to uri="stream:out"/>
+        </route>
+        -->
+        <!--
+        <route id="test-amqp">
+            <from uri="amqp:queue:camel_test"/>
+            <to uri="stream:out"/>
+        </route>
+        -->
+        <route id="fedora-to-solr">
+            <from uri="activemq:fedora_indexing"/>
+            <to uri="fcrepo:localhost:8080/fcrepo/rest"/>
+            <filter>
+                <xpath>
+                    /rdf:RDF/rdf:Description/rdf:type[@rdf:resource='http://fedora.info/definitions/v4/indexing#Indexable']
+                </xpath>
+                <to uri="fcrepo:localhost:8080/fcrepo/rest?transform=default"/>
+                <to uri="http4:localhost:8983/solr/fedora/update"/>
+            </filter>
+        </route>
+    </camelContext>
+
+</beans>
