@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:camel="http://camel.apache.org/schema/spring"
+    xsi:schemaLocation="
+       http://www.springframework.org/schema/beans
+       http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://camel.apache.org/schema/spring
+       http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+    <bean id="activemq" class="org.apache.activemq.camel.component.ActiveMQComponent">
+        <property name="brokerURL" value="tcp://localhost:61616"/>
+    </bean>
+
+    <camelContext xmlns="http://camel.apache.org/schema/spring"
+                  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+
+        <route id="solr-router">
+            <from uri="activemq:fedora_indexing"/>
+            <choice>
+                <when>
+                    <simple>${header[org.fcrepo.jms.eventType]} == 'http://fedora.info/definitions/v4/repository#NODE_REMOVED'</simple>
+                    <to uri="direct:remove"/>
+                </when>
+                <otherwise>
+                    <to uri="direct:update"/>
+                </otherwise>
+            </choice>
+        </route>
+
+        <route id="solr-updater">
+            <from uri="direct:update"/>
+            <to uri="fcrepo:localhost:8080/rest"/>
+            <filter>
+                <xpath>/rdf:RDF/rdf:Description/rdf:type[@rdf:resource='http://fedora.info/definitions/v4/indexing#Indexable']</xpath>
+                <to uri="fcrepo:localhost:8080/rest?transform=kumquat"/>
+                <to uri="http4:localhost:8983/solr/kumquat/update"/>
+            </filter>
+        </route>
+
+        <route id="solr-remover">
+            <from uri="direct:remove"/>
+            <transform>
+                <simple>{"delete":{"id":"${header[org.fcrepo.jms.baseURL]}${header[org.fcrepo.jms.identifier]}"}}</simple>
+            </transform>
+            <setHeader headerName="Content-Type">
+                <constant>application/json</constant>
+            </setHeader>
+            <setHeader headerName="CamelHttpMethod">
+                <constant>POST</constant>
+            </setHeader>
+            <to uri="http4:localhost:8983/solr/kumquat/update"/>
+        </route>
+
+    </camelContext>
+
+</beans>
