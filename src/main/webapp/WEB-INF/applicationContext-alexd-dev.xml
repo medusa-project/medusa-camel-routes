@@ -33,11 +33,8 @@
             <to uri="fcrepo:localhost:8080/fedora/rest"/>
             <filter>
                 <xpath>/rdf:RDF/rdf:Description/rdf:type[@rdf:resource='http://fedora.info/definitions/v4/indexing#Indexable']</xpath>
-                <to uri="fcrepo:localhost:8080/fedora/rest?transform=default"/>
-                <setHeader headerName="CamelHttpMethod">
-                    <constant>POST</constant>
-                </setHeader>
-                <to uri="http4:localhost:3000/index"/>
+                <to uri="fcrepo:localhost:8080/fedora/rest?transform=kumquat"/>
+                <to uri="http4:localhost:8983/solr/kumquat/update"/>
             </filter>
         </route>
 
